@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Smart Clinic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0fcff; }
+        .register-container { max-width: 400px; margin: 100px auto; padding: 30px; background: white; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        .btn-primary { 
+            background-color: #223a66; 
+            border: none; 
+        }
+        .btn-primary:hover { 
+            background-color: #1a2d4f; 
+        }
+        .user-type-options {
+            margin: 20px 0;
+        }
+        .user-type-options .form-check {
+            margin-bottom: 10px;
+        }
+        .form-check-input:checked {
+            background-color: #223a66;
+            border-color: #223a66;
+        }
+        a { color: #223a66; }
+        a:hover { color: #1a2d4f; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="register-container">
+            <h3 class="text-center mb-4">Medical Portal Registration</h3>
+            <form id="registrationForm">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone Number</label>
+                    <input type="text" class="form-control" id="phone" placeholder="Enter your phone number" required>
+                </div>
+                <div class="mb-3">
+                    <label for="userType" class="form-label">I am a:</label>
+                    <select class="form-control" id="userType" required>
+                        <option value="">Select your role</option>
+                        <option value="patient">Patient</option>
+                        <option value="doctor">Doctor</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-3">Create Account</button>
+            </form>
+            <div class="register-text">
+                Already have an account? <a href="login.html">Login here</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const userData = {
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                userType: document.getElementById('userType').value
+            };
+
+            // Store user data (in a real app, this would be sent to a server)
+            localStorage.setItem('userPhone', userData.phone);
+            localStorage.setItem('userEmail', userData.email);
+            localStorage.setItem('userType', userData.userType);
+            
+            // Store the user type with email for login verification
+            localStorage.setItem('registeredUserType-' + userData.email, userData.userType);
+
+            // Redirect based on user type
+            switch(userData.userType) {
+                case 'patient':
+                    window.location.href = "patient.html";
+                    break;
+                case 'doctor':
+                    window.location.href = "admin_A.html";
+                    break;
+                case 'admin':
+                    window.location.href = "admin_B.html";
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>

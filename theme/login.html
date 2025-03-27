@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart Clinic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0fcff; }
+        .login-container { max-width: 400px; margin: 100px auto; padding: 30px; background: white; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        .btn-primary {
+            background-color: #223a66;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #1a2d4f;
+        }
+        .btn-register {
+            background-color: #223a66;
+            border: none;
+            color: white;
+        }
+        .btn-register:hover {
+            background-color: #1a2d4f;
+            color: white;
+        }
+        a { color: #223a66; }
+        a:hover { color: #1a2d4f; }
+        .register-text {
+            text-align: center;
+            margin-top: 20px;
+            color: #6c757d;
+        }
+        .register-text a {
+            color: #223a66;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .register-text a:hover {
+            color: #1a2d4f;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <h3 class="text-center mb-4">Medical Portal</h3>
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone Number</label>
+                    <input type="text" class="form-control" id="phone" placeholder="Enter your phone number" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-3">Login</button>
+            </form>
+            <div class="register-text">
+                New to Medical Portal? <a href="register.html">Create account</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const phoneNumber = document.getElementById('phone').value;
+
+            if (email && phoneNumber) {
+                // Store the user information in localStorage
+                localStorage.setItem('userEmail', email);
+                localStorage.setItem('userPhone', phoneNumber);
+
+                // Get the user type from storage (set during registration)
+                const userType = localStorage.getItem('registeredUserType-' + email);
+                localStorage.setItem('userType', userType);
+
+                // Redirect based on stored user type
+                switch(userType) {
+                    case 'patient':
+                        window.location.href = "patient.html";
+                        break;
+                    case 'doctor':
+                        window.location.href = "admin_A.html";
+                        break;
+                    case 'admin':
+                        window.location.href = "admin_B.html";
+                        break;
+                    default:
+                        alert('Account not found. Please register first.');
+                        window.location.href = "register.html";
+                        break;
+                }
+            } else {
+                alert('Please enter both email and phone number');
+            }
+        });
+
+        // Check if user is already logged in
+        window.addEventListener('load', function() {
+            const userType = localStorage.getItem('userType');
+            if (userType) {
+                switch(userType) {
+                    case 'patient':
+                        window.location.href = "patient.html";
+                        break;
+                    case 'doctor':
+                        window.location.href = "admin_A.html";
+                        break;
+                    case 'admin':
+                        window.location.href = "admin_B.html";
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

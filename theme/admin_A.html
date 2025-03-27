@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Portal - Smart Clinic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f0fcff;
+            min-height: 100vh;
+        }
+        .doctor-container {
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .btn-primary {
+            background-color: #dc3545;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #c82333;
+        }
+        .nav-link {
+            color: #dc3545;
+        }
+        .nav-link:hover {
+            color: #c82333;
+        }
+        .emergency-box {
+            background-color: #fff3f3;
+            border: 1px solid #ffcdd2;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            padding: 3px 6px;
+            border-radius: 50%;
+            background: red;
+            color: white;
+        }
+        .chat-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .medical-record {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="doctor-container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>Doctor Portal</h3>
+                <div class="d-flex align-items-center">
+                    <div class="position-relative me-4">
+                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#notificationsModal">
+                            <i class="bi bi-bell"></i>
+                            <span class="notification-badge" id="notificationCount">0</span>
+                        </button>
+                    </div>
+                    <button class="btn btn-outline-danger" onclick="logout()">Logout</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <ul class="nav nav-tabs mb-4">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#dashboard">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#patients">Patients</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#communications">Communications</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#notifications">
+                                Notifications
+                                <span class="badge bg-danger rounded-pill" id="tabNotificationCount">0</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- Dashboard Tab -->
+                        <div class="tab-pane fade show active" id="dashboard">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h4>Today's Appointments</h4>
+                                    <div class="list-group mt-3" id="appointmentsList">
+                                        <!-- Regular appointments will be added here -->
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="emergency-box">
+                                        <h5><i class="bi bi-exclamation-triangle-fill text-danger"></i> Emergency Cases</h5>
+                                        <div id="emergencyList">
+                                            <!-- Emergency cases will be added here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Patients Tab -->
+                        <div class="tab-pane fade" id="patients">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h4>My Patients</h4>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Age</th>
+                                                    <th>Last Visit</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="patientsList">
+                                                <!-- Patient list will be added here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Communications Tab -->
+                        <div class="tab-pane fade" id="communications">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h4>Admin Communications</h4>
+                                    <div class="chat-container" id="adminChat">
+                                        <!-- Admin messages will be added here -->
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="adminMessage" placeholder="Type your message...">
+                                        <button class="btn btn-primary" onclick="sendAdminMessage()">Send</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <h4>Patient Communications</h4>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="list-group" id="patientChatList">
+                                                <!-- Patient chat list will be added here -->
+                                            </div>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="chat-container" id="patientChat">
+                                                <!-- Patient messages will be added here -->
+                                            </div>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="patientMessage" placeholder="Type your message...">
+                                                <button class="btn btn-primary" onclick="sendPatientMessage()">Send</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notifications Tab -->
+                        <div class="tab-pane fade" id="notifications">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h4>All Notifications</h4>
+                                    <div class="list-group mt-3" id="allNotificationsList">
+                                        <!-- Notifications will be added here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Patient Details Modal -->
+    <div class="modal fade" id="patientDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Patient Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="patientDetailTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#medicalHistory">Medical History</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#prescriptions">Prescriptions & Notes</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content mt-3">
+                        <div class="tab-pane fade show active" id="medicalHistory">
+                            <!-- Medical history will be added here -->
+                        </div>
+                        <div class="tab-pane fade" id="prescriptions">
+                            <div class="mb-3">
+                                <label class="form-label">Add New Note/Prescription</label>
+                                <textarea class="form-control" id="newPrescription" rows="3"></textarea>
+                                <button class="btn btn-primary mt-2" onclick="savePrescription()">Save</button>
+                            </div>
+                            <div id="prescriptionsList">
+                                <!-- Prescriptions will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div class="modal fade" id="notificationsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Notifications</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="notificationsList">
+                        <!-- Notifications will be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sample data - Replace with actual data from your backend
+        const sampleData = {
+            appointments: [
+                { id: 1, name: "John Doe", time: "09:00", type: "Regular", status: "Scheduled" },
+                { id: 2, name: "Jane Smith", time: "10:30", type: "Regular", status: "Scheduled" }
+            ],
+            emergencies: [
+                { id: 3, name: "Mike Johnson", time: "NOW", description: "Severe chest pain" }
+            ],
+            patients: [
+                { id: 1, name: "John Doe", age: 35, lastVisit: "2025-03-20" },
+                { id: 2, name: "Jane Smith", age: 28, lastVisit: "2025-03-15" },
+                { id: 3, name: "Mike Johnson", age: 42, lastVisit: "2025-03-25" },
+                { id: 4, name: "Sarah Williams", age: 31, lastVisit: "2025-03-10" }
+            ],
+            patientChats: [
+                { id: 1, patientId: 1, name: "John Doe", unread: 2, lastMessage: "Doctor, I'm feeling better today" },
+                { id: 2, patientId: 2, name: "Jane Smith", unread: 0, lastMessage: "Thank you for the prescription" },
+                { id: 3, patientId: 3, name: "Mike Johnson", unread: 3, lastMessage: "The pain is getting worse" },
+                { id: 4, patientId: 4, name: "Sarah Williams", unread: 1, lastMessage: "When should I take the medicine?" }
+            ],
+            notifications: [
+                { id: 1, type: "admin", sender: "Admin", time: "09:15", message: "New patient file uploaded for John Doe", isRead: false },
+                { id: 2, type: "patient", sender: "Mike Johnson", time: "09:30", message: "Emergency case: Severe chest pain", isRead: false },
+                { id: 3, type: "system", sender: "System", time: "10:00", message: "Reminder: Staff meeting at 14:00", isRead: true },
+                { id: 4, type: "admin", sender: "Admin", time: "10:45", message: "Schedule updated for tomorrow", isRead: false },
+                { id: 5, type: "patient", sender: "Sarah Williams", time: "11:20", message: "Question about medication", isRead: false }
+            ]
+        };
+
+        // Initialize the page
+        function init() {
+            loadAppointments();
+            loadEmergencies();
+            loadPatients();
+            loadPatientChats();
+            loadAllNotifications();
+            updateNotificationCount();
+        }
+
+        function loadAppointments() {
+            const appointmentsList = document.getElementById('appointmentsList');
+            appointmentsList.innerHTML = sampleData.appointments.map(appointment => `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${appointment.name}</h6>
+                            <small class="text-muted">Time: ${appointment.time}</small>
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="viewPatientDetails(${appointment.id})">View Details</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadEmergencies() {
+            const emergencyList = document.getElementById('emergencyList');
+            emergencyList.innerHTML = sampleData.emergencies.map(emergency => `
+                <div class="alert alert-danger mb-2">
+                    <strong>${emergency.name}</strong>
+                    <p class="mb-0">${emergency.description}</p>
+                    <small>Time: ${emergency.time}</small>
+                </div>
+            `).join('');
+        }
+
+        function loadPatients() {
+            const patientsList = document.getElementById('patientsList');
+            patientsList.innerHTML = sampleData.patients.map(patient => `
+                <tr>
+                    <td>${patient.name}</td>
+                    <td>${patient.age}</td>
+                    <td>${patient.lastVisit}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewPatientDetails(${patient.id})">View Details</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function viewPatientDetails(patientId) {
+            // Load patient details and show modal
+            const modal = new bootstrap.Modal(document.getElementById('patientDetailsModal'));
+            modal.show();
+        }
+
+        function updateNotificationCount() {
+            // Count unread notifications
+            const unreadNotifications = sampleData.notifications.filter(n => !n.isRead).length;
+            const unreadEmergencies = sampleData.emergencies.length;
+
+            // Update notification badge on bell icon
+            document.getElementById('notificationCount').textContent = unreadEmergencies;
+
+            // Update notification badge on tab
+            document.getElementById('tabNotificationCount').textContent = unreadNotifications;
+
+            // Update notifications list in modal
+            const notificationsList = document.getElementById('notificationsList');
+            notificationsList.innerHTML = sampleData.notifications
+                .filter(n => !n.isRead)
+                .map(notification => `
+                    <div class="alert ${getNotificationAlertClass(notification.type)} mb-2">
+                        <div class="d-flex justify-content-between">
+                            <strong>${notification.sender}:</strong>
+                            <small>${notification.time}</small>
+                        </div>
+                        <p class="mb-0">${notification.message}</p>
+                        <button class="btn btn-sm btn-outline-secondary mt-2" onclick="markNotificationRead(${notification.id})">
+                            Mark as Read
+                        </button>
+                    </div>
+                `).join('');
+        }
+
+        function loadAllNotifications() {
+            const allNotificationsList = document.getElementById('allNotificationsList');
+            allNotificationsList.innerHTML = sampleData.notifications
+                .map(notification => `
+                    <div class="list-group-item ${notification.isRead ? '' : 'list-group-item-warning'}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    ${getNotificationIcon(notification.type)}
+                                    <h6 class="mb-1 ms-2">${notification.sender}</h6>
+                                </div>
+                                <p class="mb-1">${notification.message}</p>
+                                <small class="text-muted">${notification.time}</small>
+                            </div>
+                            <div>
+                                ${!notification.isRead ?
+                                    `<button class="btn btn-sm btn-outline-secondary" onclick="markNotificationRead(${notification.id})">
+                                        Mark as Read
+                                    </button>` :
+                                    '<span class="badge bg-secondary">Read</span>'}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        function getNotificationIcon(type) {
+            switch(type) {
+                case 'admin':
+                    return '<i class="bi bi-person-badge text-primary fs-4"></i>';
+                case 'patient':
+                    return '<i class="bi bi-person text-danger fs-4"></i>';
+                case 'system':
+                    return '<i class="bi bi-gear text-secondary fs-4"></i>';
+                default:
+                    return '<i class="bi bi-bell text-warning fs-4"></i>';
+            }
+        }
+
+        function getNotificationAlertClass(type) {
+            switch(type) {
+                case 'admin':
+                    return 'alert-primary';
+                case 'patient':
+                    return 'alert-danger';
+                case 'system':
+                    return 'alert-secondary';
+                default:
+                    return 'alert-warning';
+            }
+        }
+
+        function markNotificationRead(id) {
+            // Find and mark notification as read
+            const notification = sampleData.notifications.find(n => n.id === id);
+            if (notification) {
+                notification.isRead = true;
+
+                // Refresh notifications
+                loadAllNotifications();
+                updateNotificationCount();
+            }
+        }
+
+        function sendAdminMessage() {
+            const message = document.getElementById('adminMessage').value;
+            if (message.trim()) {
+                const adminChat = document.getElementById('adminChat');
+                adminChat.innerHTML += `
+                    <div class="alert alert-primary mb-2">
+                        <strong>You:</strong> ${message}
+                    </div>
+                `;
+                document.getElementById('adminMessage').value = '';
+            }
+        }
+
+        function loadPatientChats() {
+            const patientChatList = document.getElementById('patientChatList');
+            patientChatList.innerHTML = sampleData.patientChats.map(chat => `
+                <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                   onclick="selectPatientChat(${chat.patientId})">
+                    ${chat.name}
+                    ${chat.unread > 0 ? `<span class="badge bg-danger rounded-pill">${chat.unread}</span>` : ''}
+                </a>
+            `).join('');
+        }
+
+        function selectPatientChat(patientId) {
+            // Find the patient chat
+            const chat = sampleData.patientChats.find(c => c.patientId === patientId);
+            if (!chat) return;
+
+            // Update active state in list
+            const chatItems = document.querySelectorAll('#patientChatList .list-group-item');
+            chatItems.forEach(item => item.classList.remove('active'));
+            document.querySelector(`#patientChatList .list-group-item:nth-child(${sampleData.patientChats.findIndex(c => c.patientId === patientId) + 1})`).classList.add('active');
+
+            // Load chat messages (in a real app, you would fetch these from a database)
+            const patientChat = document.getElementById('patientChat');
+            patientChat.innerHTML = `
+                <div class="alert alert-info mb-2">
+                    <strong>System:</strong> Chat started with ${chat.name}
+                </div>
+                <div class="alert alert-secondary mb-2">
+                    <strong>${chat.name}:</strong> ${chat.lastMessage}
+                </div>
+            `;
+
+            // Reset unread count
+            chat.unread = 0;
+            loadPatientChats();
+        }
+
+        function sendPatientMessage() {
+            const message = document.getElementById('patientMessage').value;
+            if (message.trim()) {
+                const patientChat = document.getElementById('patientChat');
+                patientChat.innerHTML += `
+                    <div class="alert alert-primary mb-2">
+                        <strong>You:</strong> ${message}
+                    </div>
+                `;
+                document.getElementById('patientMessage').value = '';
+
+                // Simulate a response after a short delay
+                setTimeout(() => {
+                    const activePatientId = parseInt(document.querySelector('#patientChatList .active').getAttribute('onclick').match(/\d+/)[0]);
+                    const patient = sampleData.patients.find(p => p.id === activePatientId);
+                    patientChat.innerHTML += `
+                        <div class="alert alert-secondary mb-2">
+                            <strong>${patient.name}:</strong> Thank you, doctor.
+                        </div>
+                    `;
+                    patientChat.scrollTop = patientChat.scrollHeight;
+                }, 1500);
+            }
+        }
+
+        function savePrescription() {
+            const prescription = document.getElementById('newPrescription').value;
+            if (prescription.trim()) {
+                const prescriptionsList = document.getElementById('prescriptionsList');
+                prescriptionsList.innerHTML = `
+                    <div class="medical-record mb-2">
+                        <strong>${new Date().toLocaleDateString()}</strong>
+                        <p>${prescription}</p>
+                    </div>
+                ` + prescriptionsList.innerHTML;
+                document.getElementById('newPrescription').value = '';
+            }
+        }
+
+        // Check if user is authenticated and is a doctor or not
+        function checkAuth() {
+            const userType = localStorage.getItem('userType');
+            const phone = localStorage.getItem('userPhone');
+            if (!phone || userType !== 'doctor') {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('userPhone');
+            localStorage.removeItem('userType');
+            window.location.href = 'login.html';
+        }
+
+        // Run auth check and init on page load
+        checkAuth();
+        init();
+    </script>
+</body>
+</html>

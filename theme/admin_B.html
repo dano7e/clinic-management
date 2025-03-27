@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - Smart Clinic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f0fcff;
+            min-height: 100vh;
+        }
+        .admin-container {
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .btn-primary, .btn-outline-primary {
+            background-color: #223a66;
+            border-color: #223a66;
+            color: white;
+        }
+        .btn-outline-primary {
+            background-color: transparent;
+            color: #223a66;
+        }
+        .btn-outline-primary:hover {
+            background-color: #223a66;
+            color: white;
+        }
+        .btn-emergency {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+        .btn-emergency:hover {
+            background-color: #bb2d3b;
+            border-color: #bb2d3b;
+        }
+        .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .emergency-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .appointment-request {
+            border-left: 4px solid #dc3545;
+        }
+        .emergency {
+            background-color: #fff3f3;
+        }
+        .patient-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .patient-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .medical-record {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .btn-emergency {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .btn-emergency:hover {
+            background-color: #c82333;
+            color: white;
+        }
+        .emergency-notification-box {
+            background-color: #fff3f3;
+            border: 2px solid #dc3545;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            display: none;
+        }
+        .scheduled-badge {
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 50px;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+        .scheduled-badge i {
+            margin-right: 5px;
+        }
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 1050;
+            display: none;
+        }
+        .chat-container {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 70%;
+        }
+        .message-sent {
+            background-color: #223a66;
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .message-received {
+            background-color: #e9ecef;
+            color: #212529;
+            align-self: flex-start;
+        }
+        .chat-input {
+            display: flex;
+        }
+        .chat-input input {
+            flex: 1;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="admin-container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>Admin Portal</h3>
+                <button class="btn btn-outline-danger" onclick="logout()">Logout</button>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <ul class="nav nav-tabs mb-4" id="adminTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#appointments">Appointment Requests</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#patients">Patients</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#doctors">Doctors</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <!-- Appointments Tab -->
+                        <div class="tab-pane fade show active" id="appointments">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4>Pending Appointment Requests</h4>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="list-group" id="appointmentsList">
+                                                <!-- Regular appointments will be loaded here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h4>Emergency Consultation Requests</h4>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="list-group" id="emergencyList">
+                                                <!-- Emergency requests will be loaded here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Appointment Status Sections -->
+                            <div class="row mt-4">
+                                <div class="col-md-4">
+                                    <h4>Scheduled Appointments</h4>
+                                    <div class="list-group" id="scheduledAppointmentsList">
+                                        <!-- Scheduled appointments will be loaded here -->
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h4>Canceled Appointments</h4>
+                                    <div class="list-group" id="canceledAppointmentsList">
+                                        <!-- Canceled appointments will be loaded here -->
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h4>Attended Appointments</h4>
+                                    <div class="list-group" id="attendedAppointmentsList">
+                                        <!-- Attended appointments will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Patients Tab -->
+                        <div class="tab-pane fade" id="patients">
+                            <h4>Patient Records - Dr. Sarah Wilson</h4>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="patientSearch" placeholder="Search patients...">
+                                        <button class="btn btn-outline-primary" type="button">
+                                            <i class="bi bi-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-primary active" onclick="toggleView('table')">
+                                            <i class="bi bi-table"></i> Table View
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" onclick="toggleView('cards')">
+                                            <i class="bi bi-grid"></i> Card View
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Table View -->
+                            <div id="tableView" class="table-responsive">
+                                <table class="table table-hover" style="background-color: #223a66; color: white;">
+                                    <thead style="background-color: #223a66; color: white;">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Date of Birth</th>
+                                            <th>Gender</th>
+                                            <th>Contact</th>
+                                            <th>Email</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="patientsTableBody">
+                                        <!-- Patient rows will be dynamically loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Card View (Initially Hidden) -->
+                            <div id="cardView" class="row" style="display: none;">
+                                <!-- Patient cards will be dynamically loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Doctors Tab -->
+                        <div class="tab-pane fade" id="doctors">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h4 style="color: #223a66;">Doctor Information</h4>
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h5 class="card-title" style="color: #223a66;">Dr. Sarah Wilson</h5>
+                                            <p class="card-text">Specialty: Cardiology</p>
+                                            <p class="card-text">Status: <span class="badge bg-success">Online</span></p>
+                                            <button class="btn btn-schedule w-100 mt-2" onclick="focusOnChat()">
+                                                <i class="bi bi-chat-dots-fill"></i> Chat with Doctor
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="list-group mt-3 d-none" id="doctorsList">
+                                        <!-- Other doctors will be hidden since admin works with one doctor -->
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <h4>Chat with Doctor</h4>
+                                    <div class="chat-container">
+                                        <div class="chat-messages" id="doctorChatMessages">
+                                            <!-- Chat messages will appear here -->
+                                        </div>
+                                        <div class="chat-input">
+                                            <input type="text" class="form-control" id="doctorChatInput" placeholder="Type your message here..." onkeypress="if(event.key === 'Enter') sendMessageToDoctor()">
+                                            <button class="btn btn-schedule" onclick="sendMessageToDoctor()">
+                                                <i class="bi bi-send-fill"></i> Send
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Details Modal -->
+    <div class="modal fade" id="patientDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="patientModalTitle">Patient Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="patientDetailTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#basicInfo">Basic Info</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#appointments">Appointments</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#medicalHistory">Medical History</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content mt-3">
+                        <div class="tab-pane fade show active" id="basicInfo">
+                            <!-- Basic patient information will be loaded here -->
+                        </div>
+                        <div class="tab-pane fade" id="appointments">
+                            <!-- Appointments will be loaded here -->
+                        </div>
+                        <div class="tab-pane fade" id="medicalHistory">
+                            <div class="card">
+                                <div class="card-body">
+                                    <!-- Medical history will be loaded here -->
+                                    <div class="d-flex justify-content-end mb-3">
+                                        <button class="btn btn-primary" onclick="sendMedicalRecordsToDoctor()">
+                                            <i class="bi bi-send"></i> Send to Doctor
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Notification Modal -->
+    <div class="modal fade" id="emergencyNotificationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Send Emergency Notification</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Patient</label>
+                        <input type="text" class="form-control" id="emergencyPatientName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Doctor</label>
+                        <select class="form-select" id="emergencyDoctorSelect">
+                            <!-- Doctors will be loaded here -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Emergency Details</label>
+                        <textarea class="form-control" id="emergencyDetails" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="sendEmergencyNotification()">Send Notification</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Details Modal -->
+    <div class="modal fade" id="appointmentDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Appointment Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="appointmentDetailsContent">
+                        <!-- Patient details will be dynamically loaded here -->
+                    </div>
+                    <div class="mb-3">
+                        <label for="appointmentDate" class="form-label">Set Appointment Date</label>
+                        <input type="date" class="form-control" id="appointmentDate">
+                    </div>
+                    <div class="mb-3">
+                        <label for="appointmentTime" class="form-label">Set Appointment Time</label>
+                        <input type="time" class="form-control" id="appointmentTime">
+                    </div>
+                    <div class="mb-3">
+                        <label for="appointmentNotes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="appointmentNotes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="confirmAppointment()">Confirm Appointment</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-check-circle-fill text-success me-2 fs-4"></i>
+            <span id="successMessageText">Operation completed successfully!</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // API endpoints
+        const API_BASE_URL = 'http://localhost:3000/api';
+        let chatSocket;
+        let currentAdminId = 1; // Default admin ID
+
+        // Initialize the page
+        function init() {
+            initializeWebSocket();
+            loadAppointments();
+            loadPatients();
+            loadDoctors();
+            loadDoctorChat();
+            setupTabEvents();
+        }
+
+        function initializeWebSocket() {
+            // Create WebSocket connection
+            chatSocket = new WebSocket('ws://localhost:3000');
+
+            chatSocket.onopen = () => {
+                console.log('WebSocket connection established');
+            };
+
+            chatSocket.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                console.log('Received message:', message);
+
+                // Add message to chat if it's a chat message
+                if (message.sender) {
+                    const newMessage = {
+                        id: message.id,
+                        sender: message.sender,
+                        message: message.message,
+                        time: message.time
+                    };
+
+                    // Add to chat messages
+                    const chatMessages = document.getElementById('doctorChatMessages');
+                    const messageHtml = `
+                        <div class="message ${message.sender === 'admin' ? 'message-sent' : 'message-received'}">
+                            <div class="message-content">
+                                ${message.message}
+                            </div>
+                            <div class="message-time">
+                                <small class="text-muted">${message.time}</small>
+                            </div>
+                        </div>
+                    `;
+
+                    chatMessages.innerHTML += messageHtml;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            };
+
+            chatSocket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            chatSocket.onclose = () => {
+                console.log('WebSocket connection closed');
+                // Try to reconnect after a delay
+                setTimeout(initializeWebSocket, 3000);
+            };
+        }
+
+        function setupTabEvents() {
+            const triggerTabList = [].slice.call(document.querySelectorAll('#adminTabs a'));
+            triggerTabList.forEach(function (triggerEl) {
+                const tabTrigger = new bootstrap.Tab(triggerEl);
+                triggerEl.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    tabTrigger.show();
+                });
+            });
+        }
+
+        async function loadAppointments() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/appointments`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch appointments');
+                }
+
+                const appointments = await response.json();
+
+                const appointmentsList = document.getElementById('appointmentsList');
+                appointmentsList.innerHTML = appointments
+                    .filter(app => !app.isEmergency)
+                    .map(appointment => `
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Patient: ${appointment.patientName}</h6>
+                                    <small>Time: ${appointment.time}</small>
+                                </div>
+                                <div>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="showAppointmentDetails('${appointment.id}')">
+                                        View Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                const emergencyList = document.getElementById('emergencyList');
+                emergencyList.innerHTML = appointments
+                    .filter(app => app.isEmergency)
+                    .map(appointment => `
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">
+                                        Patient: ${appointment.patientName}
+                                        <span class="badge bg-danger">Emergency</span>
+                                    </h6>
+                                    <small>Reason: ${appointment.emergencyReason}</small>
+                                </div>
+                                <div>
+                                    <button class="btn btn-emergency btn-sm" onclick="handleEmergencyConsultation('${appointment.id}')">
+                                        Emergency Consultation
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+            } catch (error) {
+                console.error('Error loading appointments:', error);
+                showErrorMessage('Failed to load appointments. Please try again.');
+            }
+        }
+
+        async function loadPatients() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/patients`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch patients');
+                }
+
+                const patients = await response.json();
+
+                const patientsList = document.getElementById('patientsList');
+                patientsList.innerHTML = patients.map(patient => `
+                    <div class="col-md-4 mb-3">
+                        <div class="card patient-card" onclick="viewPatientDetails(${patient.patientId})">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    ${patient.name}
+                                    ${patient.hasEmergency ? '<span class="badge bg-danger">Emergency</span>' : ''}
+                                </h5>
+                                <p class="card-text">Contact: ${patient.contact}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading patients:', error);
+                showErrorMessage('Failed to load patients. Please try again.');
+            }
+        }
+
+        async function loadDoctors() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/doctors`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch doctors');
+                }
+
+                const doctors = await response.json();
+
+                // Populate the doctor select in the appointment form
+                const doctorSelect = document.getElementById('doctorSelect');
+                doctorSelect.innerHTML = doctors.map(doctor =>
+                    `<option value="${doctor.doctorId}">${doctor.name} - ${doctor.specialty}</option>`
+                ).join('');
+
+                // Populate the emergency doctor select
+                const emergencyDoctorSelect = document.getElementById('emergencyDoctorSelect');
+                if (emergencyDoctorSelect) {
+                    emergencyDoctorSelect.innerHTML = doctors.map(doctor =>
+                        `<option value="${doctor.doctorId}">${doctor.name} - ${doctor.specialty}</option>`
+                    ).join('');
+                }
+            } catch (error) {
+                console.error('Error loading doctors:', error);
+                showErrorMessage('Failed to load doctors. Please try again.');
+            }
+        }
+
+        async function loadDoctorChat() {
+            try {
+                // Assuming we're communicating with doctor ID 1
+                const doctorId = 1;
+                const response = await fetch(`${API_BASE_URL}/chat/${currentAdminId}/${doctorId}`);
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch chat messages');
+                }
+
+                const chatMessages = await response.json();
+
+                const chatMessagesContainer = document.getElementById('doctorChatMessages');
+                chatMessagesContainer.innerHTML = chatMessages.map(message => `
+                    <div class="message ${message.sender === 'admin' ? 'message-sent' : 'message-received'}">
+                        <div class="message-content">
+                            ${message.message}
+                        </div>
+                        <div class="message-time">
+                            <small class="text-muted">${message.time}</small>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Scroll to the bottom of the chat
+                chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+            } catch (error) {
+                console.error('Error loading chat messages:', error);
+                // Don't show error message for chat as it's not critical
+            }
+        }
+
+        async function viewPatientDetails(patientId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/patients/${patientId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch patient details');
+                }
+
+                const patient = await response.json();
+
+                // Set modal title
+                document.getElementById('patientModalTitle').textContent = `Patient: ${patient.name}`;
+
+                // Load personal information
+                document.getElementById('basicInfo').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> ${patient.name}</p>
+                            <p><strong>Date of Birth:</strong> ${patient.dateOfBirth}</p>
+                            <p><strong>Age:</strong> ${patient.age}</p>
+                            <p><strong>Gender:</strong> ${patient.gender}</p>
+                            <p><strong>Contact:</strong> ${patient.contact}</p>
+                            <p><strong>Email:</strong> ${patient.email}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Emergency Contact:</strong> ${patient.emergencyContact}</p>
+                            <div class="alert ${patient.allergies.length > 0 ? 'alert-warning' : 'alert-success'} mb-3">
+                                <h6 class="alert-heading">Allergies</h6>
+                                ${patient.allergies.length > 0 ? 
+                                    `<ul class="mb-0">${patient.allergies.map(allergy => `<li>${allergy}</li>`).join('')}</ul>` : 
+                                    'No known allergies'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Load medical history
+                const medicalHistory = patient.medicalHistory || [];
+                document.getElementById('medicalHistory').innerHTML = medicalHistory.length > 0 ?
+                    medicalHistory.map(record => `
+                        <div class="medical-record">
+                            <h6>${record.date}</h6>
+                            <p><strong>Details:</strong> ${record.recordDetails}</p>
+                        </div>
+                    `).join('') :
+                    '<p>No medical history available.</p>';
+
+                // Show the modal
+                const modal = new bootstrap.Modal(document.getElementById('patientDetailsModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error fetching patient details:', error);
+                showErrorMessage('Failed to load patient details. Please try again.');
+            }
+        }
+
+        async function showEmergencyModal(appointmentId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/appointments`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch appointments');
+                }
+
+                const appointments = await response.json();
+                const appointment = appointments.find(a => a.appointmentId === appointmentId);
+
+                if (!appointment) {
+                    throw new Error('Appointment not found');
+                }
+
+                // Toggle the emergency box visibility
+                const emergencyBox = document.getElementById(`emergency-box-${appointmentId}`);
+                if (emergencyBox) {
+                    if (emergencyBox.style.display === 'block') {
+                        // If already visible, show the modal
+                        document.getElementById('emergencyPatientName').value = appointment.patientName;
+                        const emergencyModal = new bootstrap.Modal(document.getElementById('emergencyNotificationModal'));
+                        emergencyModal.show();
+                    } else {
+                        // First click - show the emergency box
+                        emergencyBox.style.display = 'block';
+
+                        // Hide the emergency button
+                        const appointmentItem = document.getElementById(`appointment-${appointmentId}`);
+                        const emergencyButton = appointmentItem.querySelector('.btn-emergency');
+                        emergencyButton.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error showing emergency modal:', error);
+                showErrorMessage('Failed to load appointment details. Please try again.');
+            }
+        }
+
+        async function sendEmergencyNotification() {
+            const patientName = document.getElementById('emergencyPatientName').value;
+            const doctorId = document.getElementById('emergencyDoctorSelect').value;
+            const details = document.getElementById('emergencyDetails').value;
+
+            if (!doctorId || !details) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            try {
+                // First get the patient ID from the name
+                const patientsResponse = await fetch(`${API_BASE_URL}/patients`);
+                if (!patientsResponse.ok) {
+                    throw new Error('Failed to fetch patients');
+                }
+
+                const patients = await patientsResponse.json();
+                const patient = patients.find(p => p.name === patientName);
+
+                if (!patient) {
+                    throw new Error('Patient not found');
+                }
+
+                // Send emergency notification
+                const response = await fetch(`${API_BASE_URL}/emergency`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        patientId: patient.patientId,
+                        doctorId: parseInt(doctorId),
+                        adminId: currentAdminId,
+                        details: details
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to send emergency notification');
+                }
+
+                const result = await response.json();
+
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('emergencyNotificationModal'));
+                modal.hide();
+
+                // Show success message
+                showSuccessMessage(`Emergency notification sent to doctor for patient ${patientName}`);
+
+                // Refresh the appointments
+                loadAppointments();
+            } catch (error) {
+                console.error('Error sending emergency notification:', error);
+                showErrorMessage('Failed to send emergency notification. Please try again.');
+            }
+        }
+
+        async function scheduleAppointment() {
+            const doctorId = document.getElementById('doctorSelect').value;
+            const date = document.getElementById('appointmentDate').value;
+            const time = document.getElementById('appointmentTime').value;
+            const notes = document.getElementById('appointmentNotes').value;
+            const sendMedicalHistory = document.getElementById('sendMedicalHistory').checked;
+
+            if (!doctorId || !date || !time) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            // Get the active patient ID from the modal title
+            const patientName = document.getElementById('patientModalTitle').textContent.replace('Patient: ', '');
+
+            try {
+                // First get the patient ID from the name
+                const patientsResponse = await fetch(`${API_BASE_URL}/patients`);
+                if (!patientsResponse.ok) {
+                    throw new Error('Failed to fetch patients');
+                }
+
+                const patients = await patientsResponse.json();
+                const patient = patients.find(p => p.name === patientName);
+
+                if (!patient) {
+                    throw new Error('Patient not found');
+                }
+
+                // Schedule appointment
+                const appointmentTime = `${date} ${time}`;
+                const response = await fetch(`${API_BASE_URL}/appointments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        patientId: patient.patientId,
+                        doctorId: parseInt(doctorId),
+                        adminId: currentAdminId,
+                        appointmentTime: appointmentTime,
+                        status: 'Scheduled',
+                        isEmergency: false,
+                        priority: 1
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to schedule appointment');
+                }
+
+                const result = await response.json();
+
+                // If sendMedicalHistory is checked, create a medical record
+                if (sendMedicalHistory) {
+                    const medicalRecordResponse = await fetch(`${API_BASE_URL}/medicalRecords`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            patientId: patient.patientId,
+                            doctorId: parseInt(doctorId),
+                            recordDetails: `Medical history sent for appointment on ${appointmentTime}. Notes: ${notes}`
+                        })
+                    });
+
+                    if (!medicalRecordResponse.ok) {
+                        console.error('Failed to send medical history');
+                    }
+                }
+
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('patientDetailsModal'));
+                modal.hide();
+
+                // Show success message
+                showSuccessMessage(`Appointment scheduled for ${patientName}`);
+
+                // Refresh the appointments
+                loadAppointments();
+                loadPatients();
+            } catch (error) {
+                console.error('Error scheduling appointment:', error);
+                showErrorMessage('Failed to schedule appointment. Please try again.');
+            }
+        }
+
+        function sendMessageToDoctor() {
+            const chatInput = document.getElementById('doctorChatInput');
+            const message = chatInput.value.trim();
+
+            if (!message) return;
+
+            // Send via WebSocket
+            if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                const chatMessage = {
+                    type: 'chat',
+                    sender: 'admin',
+                    recipient: 'doctor',
+                    content: message
+                };
+
+                chatSocket.send(JSON.stringify(chatMessage));
+
+                // Clear the input
+                chatInput.value = '';
+            } else {
+                showErrorMessage('Chat connection lost. Reconnecting...');
+                initializeWebSocket();
+            }
+        }
+
+        function focusOnChat() {
+            // Switch to the doctors tab if not already active
+            const doctorsTab = document.querySelector('[href="#doctors"]');
+            const tabTrigger = new bootstrap.Tab(doctorsTab);
+            tabTrigger.show();
+
+            // Focus on the chat input
+            setTimeout(() => {
+                document.getElementById('doctorChatInput').focus();
+            }, 300);
+        }
+
+        function showSuccessMessage(message) {
+            const successMessage = document.getElementById('successMessage');
+            const successMessageText = document.getElementById('successMessageText');
+
+            successMessageText.textContent = message;
+            successMessage.style.display = 'block';
+
+            // Hide after 3 seconds
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        function showErrorMessage(message) {
+            alert(message);
+        }
+
+        // Check if user is authenticated and is an admin
+        function checkAuth() {
+            const userType = localStorage.getItem('userType');
+            const phone = localStorage.getItem('userPhone');
+            if (!phone || userType !== 'admin') {
+                window.location.href = 'login.html';
+            } else {
+                // Set the current admin ID (in a real app, this would come from the backend)
+                currentAdminId = 1;
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('userPhone');
+            localStorage.removeItem('userType');
+            window.location.href = 'login.html';
+        }
+
+        // Run auth check and init on page load
+        checkAuth();
+        init();
+    </script>
+
+    <script>
+        // Sample data for patients
+        const patients = [
+            {
+                id: "1",
+                name: "John Smith",
+                dateOfBirth: "1980-05-15",
+                age: 45,
+                gender: "Male",
+                contact: "+1-234-567-8901",
+                email: "john.smith@email.com",
+                emergencyContact: "Jane Smith: +1-234-567-8902",
+                allergies: ["Penicillin", "Peanuts"],
+                appointments: [
+                    { date: "2025-03-28", time: "10:00 AM", status: "Scheduled" },
+                    { date: "2025-03-15", time: "2:30 PM", status: "Completed" }
+                ],
+                medicalHistory: [
+                    { 
+                        date: "2025-03-15", 
+                        diagnosis: "Hypertension", 
+                        treatment: "Prescribed medication and lifestyle changes",
+                        medications: ["Lisinopril 10mg", "Aspirin 81mg"],
+                        notes: "Blood pressure: 140/90"
+                    },
+                    { 
+                        date: "2025-02-20", 
+                        diagnosis: "Annual Checkup", 
+                        treatment: "No issues found",
+                        medications: [],
+                        notes: "All vitals normal"
+                    }
+                ]
+            },
+            {
+                id: "2",
+                name: "Sarah Johnson",
+                dateOfBirth: "1993-08-22",
+                age: 32,
+                gender: "Female",
+                contact: "+1-234-567-8903",
+                email: "sarah.j@email.com",
+                emergencyContact: "Mike Johnson: +1-234-567-8904",
+                allergies: ["Latex"],
+                appointments: [
+                    { date: "2025-03-29", time: "11:30 AM", status: "Scheduled" }
+                ],
+                medicalHistory: [
+                    {
+                        date: "2025-03-01",
+                        diagnosis: "Migraine",
+                        treatment: "Prescribed medication",
+                        medications: ["Sumatriptan 50mg"],
+                        notes: "Frequency: 2-3 times per month"
+                    }
+                ]
+            }
+        ];
+
+        // Function to display patient cards
+        function displayPatients(filteredPatients = patients) {
+            const patientsList = document.getElementById('patientsList');
+            patientsList.innerHTML = filteredPatients.map(patient => `
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title">${patient.name}</h5>
+                                <span class="badge bg-info">ID: ${patient.id}</span>
+                            </div>
+                            <p class="card-text">
+                                <small class="text-muted">DOB: ${patient.dateOfBirth} (${patient.age} years)</small><br>
+                                <small class="text-muted">Gender: ${patient.gender}</small><br>
+                                <small class="text-muted">Email: ${patient.email}</small><br>
+                                <small class="text-muted">Contact: ${patient.contact}</small>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <button class="btn btn-primary btn-sm" onclick="showPatientDetails('${patient.id}')">
+                                    View Details
+                                </button>
+                                <span class="badge bg-success">Scheduled</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Function to show patient details
+        function showPatientDetails(patientId) {
+            const patient = patients.find(p => p.id === patientId);
+            if (!patient) return;
+
+            document.getElementById('patientModalTitle').textContent = `${patient.name} (ID: ${patient.id})`;
+            
+            // Basic Info
+            document.getElementById('basicInfo').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Name:</strong> ${patient.name}</p>
+                        <p><strong>Date of Birth:</strong> ${patient.dateOfBirth}</p>
+                        <p><strong>Age:</strong> ${patient.age}</p>
+                        <p><strong>Gender:</strong> ${patient.gender}</p>
+                        <p><strong>Contact:</strong> ${patient.contact}</p>
+                        <p><strong>Email:</strong> ${patient.email}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Emergency Contact:</strong> ${patient.emergencyContact}</p>
+                        <div class="alert ${patient.allergies.length > 0 ? 'alert-warning' : 'alert-success'} mb-3">
+                            <h6 class="alert-heading">Allergies</h6>
+                            ${patient.allergies.length > 0 ? 
+                                `<ul class="mb-0">${patient.allergies.map(allergy => `<li>${allergy}</li>`).join('')}</ul>` : 
+                                'No known allergies'}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Appointments
+            document.getElementById('appointments').innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${patient.appointments.map(app => `
+                                <tr>
+                                    <td>${app.date}</td>
+                                    <td>${app.time}</td>
+                                    <td><span class="badge ${app.status === 'Scheduled' ? 'bg-success' : 'bg-secondary'}">${app.status}</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Medical History
+            document.getElementById('medicalHistory').innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Diagnosis</th>
+                                <th>Treatment</th>
+                                <th>Medications</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${patient.medicalHistory.map(record => `
+                                <tr>
+                                    <td>${record.date}</td>
+                                    <td>${record.diagnosis}</td>
+                                    <td>${record.treatment}</td>
+                                    <td>${record.medications.length > 0 ? 
+                                        `<ul class="mb-0">${record.medications.map(med => `<li>${med}</li>`).join('')}</ul>` : 
+                                        'None'}</td>
+                                    <td>${record.notes}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Show the modal
+            new bootstrap.Modal(document.getElementById('patientDetailsModal')).show();
+        }
+
+        // Search functionality
+        document.getElementById('patientSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredPatients = patients.filter(patient => 
+                patient.id.toLowerCase().includes(searchTerm) ||
+                patient.name.toLowerCase().includes(searchTerm) ||
+                patient.email.toLowerCase().includes(searchTerm) ||
+                patient.contact.includes(searchTerm)
+            );
+            
+            const patientsList = document.getElementById('patientsList');
+            if (filteredPatients.length === 0) {
+                patientsList.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info">No patients found matching "${e.target.value}"</div>
+                    </div>
+                `;
+            } else {
+                displayPatients(filteredPatients);
+            }
+        });
+
+        // Initialize the patient list
+        document.addEventListener('DOMContentLoaded', displayPatients);
+    </script>
+
+    <script>
+        let currentView = 'table';
+
+        function toggleView(view) {
+            currentView = view;
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const buttons = document.querySelectorAll('.btn-group .btn');
+
+            if (view === 'table') {
+                tableView.style.display = 'block';
+                cardView.style.display = 'none';
+                displayPatientsTable();
+            } else {
+                tableView.style.display = 'none';
+                cardView.style.display = 'flex';
+                displayPatientsCards();
+            }
+
+            // Update active button
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase().includes(view)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function displayPatientsTable(filteredPatients = patients) {
+            const tbody = document.getElementById('patientsTableBody');
+            tbody.innerHTML = filteredPatients.map(patient => `
+                <tr>
+                    <td><span class="badge bg-info">${patient.id}</span></td>
+                    <td>${patient.name}</td>
+                    <td>${patient.dateOfBirth} (${patient.age})</td>
+                    <td>${patient.gender}</td>
+                    <td>${patient.contact}</td>
+                    <td>${patient.email}</td>
+                    <td>
+                        <span class="badge bg-success">Scheduled</span>
+                        ${patient.allergies.length > 0 ? 
+                            `<span class="badge bg-warning text-dark" title="Allergies: ${patient.allergies.join(', ')}">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </span>` : 
+                            ''}
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="showPatientDetails('${patient.id}')">
+                            <i class="bi bi-eye"></i> View
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function displayPatientsCards(filteredPatients = patients) {
+            const cardView = document.getElementById('cardView');
+            cardView.innerHTML = filteredPatients.map(patient => `
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title">${patient.name}</h5>
+                                <span class="badge bg-info">ID: ${patient.id}</span>
+                            </div>
+                            <p class="card-text">
+                                <small class="text-muted">DOB: ${patient.dateOfBirth} (${patient.age} years)</small><br>
+                                <small class="text-muted">Gender: ${patient.gender}</small><br>
+                                <small class="text-muted">Email: ${patient.email}</small><br>
+                                <small class="text-muted">Contact: ${patient.contact}</small>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <button class="btn btn-primary btn-sm" onclick="showPatientDetails('${patient.id}')">
+                                    View Details
+                                </button>
+                                <span class="badge bg-success">Scheduled</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update search functionality to work with both views
+        document.getElementById('patientSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredPatients = patients.filter(patient => 
+                patient.id.toLowerCase().includes(searchTerm) ||
+                patient.name.toLowerCase().includes(searchTerm) ||
+                patient.email.toLowerCase().includes(searchTerm) ||
+                patient.contact.includes(searchTerm)
+            );
+            
+            if (filteredPatients.length === 0) {
+                const noResultsHtml = `
+                    <div class="col-12">
+                        <div class="alert alert-info">No patients found matching "${e.target.value}"</div>
+                    </div>
+                `;
+                if (currentView === 'table') {
+                    document.getElementById('patientsTableBody').innerHTML = `
+                        <tr><td colspan="8" class="text-center">${noResultsHtml}</td></tr>
+                    `;
+                } else {
+                    document.getElementById('cardView').innerHTML = noResultsHtml;
+                }
+            } else {
+                if (currentView === 'table') {
+                    displayPatientsTable(filteredPatients);
+                } else {
+                    displayPatientsCards(filteredPatients);
+                }
+            }
+        });
+
+        // Initialize the view when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleView('table');
+        });
+    </script>
+
+    <script>
+        function confirmAppointment() {
+            const appointmentDate = document.getElementById('appointmentDate').value;
+            const appointmentTime = document.getElementById('appointmentTime').value;
+            const appointmentNotes = document.getElementById('appointmentNotes').value;
+
+            // Logic to save the appointment date, time, and notes
+            console.log(`Appointment confirmed for date: ${appointmentDate} and time: ${appointmentTime} with notes: ${appointmentNotes}`);
+
+            // Send notifications to doctor and patient
+            sendNotificationToDoctor(appointmentDate, appointmentTime, appointmentNotes);
+            sendNotificationToPatient(appointmentDate, appointmentTime);
+
+            // Close the modal
+            bootstrap.Modal.getInstance(document.getElementById('appointmentDetailsModal')).hide();
+        }
+
+        function sendNotificationToDoctor(date, time, notes) {
+            // Simulate sending notification to doctor
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-info';
+            notification.innerHTML = `<strong>New Appointment Scheduled</strong><br>Date: ${date}<br>Time: ${time}<br>Notes: ${notes}`;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        function sendNotificationToPatient(date, time) {
+            // Simulate sending notification to patient
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-success';
+            notification.innerHTML = `<strong>Appointment Confirmed</strong><br>Date: ${date}<br>Time: ${time}`;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+    </script>
+
+    <script>
+        // Sample appointment data
+        const appointments = [
+            {
+                id: '1',
+                patientName: 'John Smith',
+                time: '10:00 AM',
+                isEmergency: false
+            },
+            {
+                id: '2',
+                patientName: 'Sarah Johnson',
+                time: '11:30 AM',
+                isEmergency: true,
+                emergencyReason: 'Severe chest pain'
+            }
+        ];
+
+        // Initialize appointments on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            displayAppointments();
+        });
+
+        function displayAppointments() {
+            const appointmentsList = document.getElementById('appointmentsList');
+            const emergencyList = document.getElementById('emergencyList');
+            
+            // Regular appointments
+            appointmentsList.innerHTML = appointments
+                .filter(app => !app.isEmergency)
+                .map(app => `
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Patient: ${app.patientName}</h6>
+                                <small>Time: ${app.time}</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-outline-primary btn-sm" onclick="showAppointmentDetails('${app.id}')">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+            // Emergency requests
+            emergencyList.innerHTML = appointments
+                .filter(app => app.isEmergency)
+                .map(app => `
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">
+                                    Patient: ${app.patientName}
+                                    <span class="badge bg-danger">Emergency</span>
+                                </h6>
+                                <small>Reason: ${app.emergencyReason}</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-emergency btn-sm" onclick="handleEmergencyConsultation('${app.id}')">
+                                    Emergency Consultation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        function showAppointmentDetails(appointmentId) {
+            const appointment = appointments.find(app => app.id === appointmentId);
+            if (!appointment) return;
+
+            document.getElementById('appointmentDetailsContent').innerHTML = `
+                <p><strong>Patient:</strong> ${appointment.patientName}</p>
+                <p><strong>Contact:</strong> ${appointment.patientContact}</p>
+                <p><strong>Notes:</strong> ${appointment.notes || 'No notes available'}</p>
+            `;
+
+            // Show the modal
+            new bootstrap.Modal(document.getElementById('appointmentDetailsModal')).show();
+        }
+
+        function handleEmergencyConsultation(appointmentId) {
+            // Logic to handle emergency consultation
+            console.log(`Emergency consultation for appointment ${appointmentId}`);
+        }
+    </script>
+
+    <script>
+        // Function to display appointment statuses
+        function displayAppointmentStatuses() {
+            const scheduledAppointmentsList = document.getElementById('scheduledAppointmentsList');
+            const canceledAppointmentsList = document.getElementById('canceledAppointmentsList');
+            const attendedAppointmentsList = document.getElementById('attendedAppointmentsList');
+
+            // Sample data for appointment statuses
+            const scheduledAppointments = appointments.filter(app => app.status === 'Scheduled');
+            const canceledAppointments = appointments.filter(app => app.status === 'Canceled');
+            const attendedAppointments = appointments.filter(app => app.status === 'Attended');
+
+            // Populate Scheduled Appointments
+            scheduledAppointmentsList.innerHTML = scheduledAppointments.map(app => `
+                <div class="list-group-item">
+                    <h6 class="mb-1">Patient: ${app.patientName}</h6>
+                    <small>Time: ${app.time}</small>
+                </div>
+            `).join('');
+
+            // Populate Canceled Appointments
+            canceledAppointmentsList.innerHTML = canceledAppointments.map(app => `
+                <div class="list-group-item">
+                    <h6 class="mb-1">Patient: ${app.patientName}</h6>
+                    <small>Reason: Canceled by patient</small>
+                </div>
+            `).join('');
+
+            // Populate Attended Appointments
+            attendedAppointmentsList.innerHTML = attendedAppointments.map(app => `
+                <div class="list-group-item">
+                    <h6 class="mb-1">Patient: ${app.patientName}</h6>
+                    <small>Time: ${app.time}</small>
+                </div>
+            `).join('');
+        }
+
+        // Call this function to display appointment statuses on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            displayAppointments();
+            displayAppointmentStatuses();
+        });
+    </script>
+</body>
+</html>

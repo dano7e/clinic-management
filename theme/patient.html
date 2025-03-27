@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Portal - Smart Clinic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0fcff;
+            min-height: 100vh;
+        }
+        .header {
+            background: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .logo {
+            height: 40px;
+        }
+        .welcome-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+        .welcome-section h1 {
+            color: #223a66;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        .welcome-section p {
+            color: #6c757d;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        .patient-container {
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .btn-primary {
+            background-color: #223a66;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #1a2d4f;
+        }
+        .notification {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #223a66;
+        }
+        .notification.unread {
+            background-color: #f0f7ff;
+        }
+        .sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+        .emergency-message {
+            display: none;
+            padding: 15px;
+            background-color: #fff3f3;
+            border-left: 4px solid #dc3545;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .regular-message {
+            display: none;
+            padding: 15px;
+            background-color: #f0f7ff;
+            border-left: 4px solid #223a66;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .form-check-input:checked {
+            background-color: #223a66;
+            border-color: #223a66;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <a href="index.html" style="transition: opacity 0.3s ease;">
+                        <img src="images/Clinova 1.png" alt="Clinova Logo" class="logo me-2" style="cursor: pointer;">
+                    </a>
+                    <span class="mx-2">|</span>
+                    <h4 class="mb-0" style="color: #6c757d;">Patient Portal</h4>
+                </div>
+                <button class="btn btn-outline-danger" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <h1>Welcome to Clinova Care</h1>
+            <p>Your health is our priority. Here you can easily schedule appointments, receive notifications from your healthcare providers, and manage your medical consultations. For emergency cases, we provide immediate attention to ensure you receive the care you need as quickly as possible.</p>
+        </div>
+
+        <div class="row">
+            <!-- Left Sidebar - Appointments -->
+            <div class="col-md-3">
+                <div class="sidebar">
+                    <h4>Request Appointment</h4>
+                    <div id="initialQuestion" class="mt-3">
+                        <p>Is this an emergency?</p>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="emergency" id="emergencyYes" value="yes">
+                            <label class="form-check-label" for="emergencyYes">
+                                Yes
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="emergency" id="emergencyNo" value="no">
+                            <label class="form-check-label" for="emergencyNo">
+                                No
+                            </label>
+                        </div>
+                        <button onclick="handleEmergencyChoice()" class="btn btn-primary mt-3">Continue</button>
+                    </div>
+
+                    <div id="emergencyMessage" class="emergency-message">
+                        <h5>Emergency Request Sent</h5>
+                        <p>Your request will be responded to for an emergency consultation as soon as possible.</p>
+                    </div>
+
+                    <div id="regularMessage" class="regular-message">
+                        <p>Please wait for your scheduled appointment time.</p>
+                    </div>
+
+                    <form id="appointmentForm" class="mt-3" style="display: none;">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="note" class="form-label">Note</label>
+                            <textarea class="form-control" id="note" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Request Appointment</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-md-6">
+                <div class="patient-container">
+                    <h4>My Appointments</h4>
+                    <div class="alert alert-success" id="appointmentNotification" style="display: none;">
+                        <strong>Appointment Confirmed!</strong> Your appointment has been scheduled.
+                    </div>
+                    <div class="list-group mt-3">
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">No upcoming appointments</h6>
+                                    <small class="text-muted">Request an appointment from the sidebar</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Notifications -->
+            <div class="col-md-3">
+                <div class="sidebar">
+                    <h4>Notifications</h4>
+                    <div id="notifications" class="mt-3">
+                        <div class="notification unread">
+                            <h6 class="mb-1">Appointment Confirmed</h6>
+                            <p class="mb-1">Your appointment has been scheduled for tomorrow at 10:00 AM</p>
+                            <small class="text-muted">1 hour ago</small>
+                        </div>
+                        <div class="notification">
+                            <h6 class="mb-1">Message from Dr. Smith</h6>
+                            <p class="mb-1">Please bring your previous medical records.</p>
+                            <small class="text-muted">2 hours ago</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get user name from localStorage
+        const userName = localStorage.getItem('userName');
+        if (userName) {
+            document.querySelector('.welcome-section h1').textContent = `Welcome, ${userName}`;
+        }
+
+        function handleEmergencyChoice() {
+            const emergencyChoice = document.querySelector('input[name="emergency"]:checked');
+            if (!emergencyChoice) {
+                alert('Please select yes or no');
+                return;
+            }
+
+            document.getElementById('initialQuestion').style.display = 'none';
+
+            if (emergencyChoice.value === 'yes') {
+                document.getElementById('emergencyMessage').style.display = 'block';
+                document.getElementById('appointmentForm').style.display = 'none';
+                document.getElementById('regularMessage').style.display = 'none';
+            } else {
+                document.getElementById('regularMessage').style.display = 'block';
+                document.getElementById('appointmentForm').style.display = 'block';
+                document.getElementById('emergencyMessage').style.display = 'none';
+            }
+        }
+
+        // Check if user is authenticated and is a patient
+        function checkAuth() {
+            const userType = localStorage.getItem('userType');
+            const phone = localStorage.getItem('userPhone');
+            if (!phone || userType !== 'patient') {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('userPhone');
+            localStorage.removeItem('userType');
+            window.location.href = 'login.html';
+        }
+
+        // Handle appointment form submission
+        document.getElementById('appointmentForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const appointmentData = {
+                name: document.getElementById('name').value,
+                note: document.getElementById('note').value,
+                phone: localStorage.getItem('userPhone'),
+                timestamp: new Date().toISOString()
+            };
+
+            alert('Appointment request sent successfully! Admin will contact you shortly.');
+            event.target.reset();
+
+            // Reset the form and show initial question
+            document.getElementById('initialQuestion').style.display = 'block';
+            document.getElementById('appointmentForm').style.display = 'none';
+            document.getElementById('regularMessage').style.display = 'none';
+            document.getElementById('appointmentNotification').style.display = 'block';
+        });
+
+        // Run auth check on page load
+        checkAuth();
+    </script>
+</body>
+</html>

@@ -1,2 +1,2 @@
-# clinic-management
+# Clinova
 clinic management system
